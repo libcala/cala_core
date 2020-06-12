@@ -1,5 +1,5 @@
 ![cala_core logo](https://github.com/libcala/cala_core/blob/master/res/logo.svg)
-#### TAGLINE-REPLACE
+#### Low-level platform glue for Cala
 [![crates.io](https://img.shields.io/crates/v/cala_core.svg)](https://crates.io/crates/cala_core)
 [![docs.rs](https://docs.rs/cala_core/badge.svg)](https://docs.rs/cala_core)
 [![tests](https://github.com/libcala/cala_core/workflows/tests/badge.svg)](https://github.com/libcala/cala_core/actions?query=workflow%3Atests)
@@ -11,10 +11,11 @@
 [GitHub](https://github.com/libcala/cala_core)
 
 # cala_core
-Template to use for libcala libraries: `cargo generate --git https://github.com/libcala/lib_template`
+This crate is used to make it easier to port to WASM, Android, etc. 
 
 ### Supports
- - Doing this cool thing
+ - Web: cargo-web/stdweb, wasm-pack/wasm-bindgen, cargo-cala backends for maximum
+   interoperability
 
 ## Targets
 Targets that are marked are currently *supported*, the rest are *planned*.

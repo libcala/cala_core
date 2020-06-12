@@ -9,11 +9,11 @@
 
 [package]
 name = "cala_core"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
 license = "Apache-2.0 OR Zlib"
 
-description = "TAGLINE-REPLACE"
+description = "Low-level platform glue for Cala"
 repository = "https://github.com/libcala/cala_core"
 documentation = "https://docs.rs/cala_core"
 homepage = "https://github.com/libcala/cala_core/blob/master/CHANGELOG.md"
