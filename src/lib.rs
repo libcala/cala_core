@@ -1,4 +1,4 @@
-// {{crate_name}}
+// cala_core
 //
 // Copyright (c) 2020 Jeron Aldaron Lau
 //
@@ -7,21 +7,21 @@
 // or http://opensource.org/licenses/Zlib>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-/// # Getting Started
-/// Add the following to your `Cargo.toml`:
-/// ```toml
-/// [dependencies.{{crate_name}}]
-/// version = "0.0.1"
-/// ```
-///
-/// ```rust
-/// // TODO
-/// ```
+//! # Getting Started
+//! Add the following to your `Cargo.toml`:
+//! ```toml
+//! [dependencies.cala_core]
+//! version = "0.0.1"
+//! ```
+//!
+//! ```rust
+//! // TODO
+//! ```
 
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/libcala/{{crate_name}}/master/res/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/libcala/{{crate_name}}/master/res/logo.svg",
-    html_root_url = "https://docs.rs/{{crate_name}}"
+    html_logo_url = "https://raw.githubusercontent.com/libcala/cala_core/master/res/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/libcala/cala_core/master/res/logo.svg",
+    html_root_url = "https://docs.rs/cala_core"
 )]
 #![forbid(unsafe_code)]
 #![warn(

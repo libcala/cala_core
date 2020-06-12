@@ -1,16 +1,16 @@
-![{{crate_name}} logo](https://github.com/libcala/{{crate_name}}/blob/master/res/logo.svg)
+![cala_core logo](https://github.com/libcala/cala_core/blob/master/res/logo.svg)
 #### TAGLINE-REPLACE
-[![crates.io](https://img.shields.io/crates/v/{{crate_name}}.svg)](https://crates.io/crates/{{crate_name}})
-[![docs.rs](https://docs.rs/{{crate_name}}/badge.svg)](https://docs.rs/{{crate_name}})
-[![tests](https://github.com/libcala/{{crate_name}}/workflows/tests/badge.svg)](https://github.com/libcala/{{crate_name}}/actions?query=workflow%3Atests)
+[![crates.io](https://img.shields.io/crates/v/cala_core.svg)](https://crates.io/crates/cala_core)
+[![docs.rs](https://docs.rs/cala_core/badge.svg)](https://docs.rs/cala_core)
+[![tests](https://github.com/libcala/cala_core/workflows/tests/badge.svg)](https://github.com/libcala/cala_core/actions?query=workflow%3Atests)
 [![changelog](https://img.shields.io/badge/changelog-green.svg)]()
 
-[Getting Started](https://docs.rs/{{crate_name}}#getting-started) |
-[Changelog](https://github.com/libcala/{{crate_name}}/blob/master/CHANGELOG.md) |
+[Getting Started](https://docs.rs/cala_core#getting-started) |
+[Changelog](https://github.com/libcala/cala_core/blob/master/CHANGELOG.md) |
 [Cala Blog](https://libcala.github.io#blog) |
-[GitHub](https://github.com/libcala/{{crate_name}})
+[GitHub](https://github.com/libcala/cala_core)
 
-# {{crate_name}}
+# cala_core
 Template to use for libcala libraries: `cargo generate --git https://github.com/libcala/lib_template`
 
 ### Supports
@@ -76,10 +76,10 @@ packages, so it may seem a little weird.
 ## License
 Licensed under either of
  - Apache License, Version 2.0,
-   ([LICENSE-APACHE](https://github.com/libcala/{{crate_name}}/blob/master/LICENSE-APACHE) or
+   ([LICENSE-APACHE](https://github.com/libcala/cala_core/blob/master/LICENSE-APACHE) or
    [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0))
  - Zlib License,
-   ([LICENSE-ZLIB](https://github.com/libcala/{{crate_name}}/blob/master/LICENSE-ZLIB) or
+   ([LICENSE-ZLIB](https://github.com/libcala/cala_core/blob/master/LICENSE-ZLIB) or
    [https://opensource.org/licenses/Zlib](https://opensource.org/licenses/Zlib))
 
 at your option.
@@ -97,8 +97,8 @@ Features requests will not complete as fast.  If you have any questions, design
 critques, or want me to find you something to work on based on your skill level,
 you can email me at [jeronlau@plopgrizzly.com](mailto:jeronlau@plopgrizzly.com).
 Otherwise,
-[here's a link to the issues on GitHub](https://github.com/libcala/{{crate_name}}/issues).
+[here's a link to the issues on GitHub](https://github.com/libcala/cala_core/issues).
 Before contributing, check out the
-[contribution guidelines](https://github.com/libcala/{{crate_name}}/blob/master/CONTRIBUTING.md),
+[contribution guidelines](https://github.com/libcala/cala_core/blob/master/CONTRIBUTING.md),
 and, as always, make sure to follow the
-[code of conduct](https://github.com/libcala/{{crate_name}}/blob/master/CODE_OF_CONDUCT.md).
+[code of conduct](https://github.com/libcala/cala_core/blob/master/CODE_OF_CONDUCT.md).
