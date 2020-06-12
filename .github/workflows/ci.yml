@@ -20,15 +20,14 @@ jobs:
       with:
         command: test
         args: --all --all-features
-  cross-compilation:
+  cross-compile:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         tc: [stable, beta, nightly]
         cc:
         - aarch64-fuchsia
-        - aarch64-apple-ios
         - aarch64-linux-android
         - i686-pc-windows-gnu
         - i686-unknown-freebsd
@@ -36,6 +35,25 @@ jobs:
         - wasm32-unknown-unknown
         - x86_64-apple-darwin
         - x86_64-unknown-redox
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.tc }}
+        target: ${{ matrix.cc }}
+        override: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --all-features --target=${{ matrix.cc }}
+  cross-compile-ios:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+        tc: [stable, beta, nightly]
+        cc: [aarch64-apple-ios]
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
