@@ -9,14 +9,34 @@
 
 //! Web-Specific APIs
 
+#[cfg(feature = "wasm-bindgen")]
+use wasm_bindgen::prelude::*;
+
 #[cfg(feature = "stdweb")]
 use stdweb::unstable::TryInto;
+
+/// 
+#[cfg(feature = "wasm-bindgen")]
+#[wasm_bindgen]
+pub fn _cala_memory() -> JsValue {
+    wasm_bindgen::memory()
+}
 
 /// A JavaScript variable.
 #[derive(Debug)]
 pub struct JsVar(u32);
 
 impl Drop for JsVar {
+    #[cfg(feature = "wasm-bindgen")]
+    fn drop(&mut self) {
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_free(idx: u32);
+        }
+
+        _cala_js_free(self.0);
+    }
+
     #[cfg(feature = "stdweb")]
     fn drop(&mut self) {
         js! {
@@ -42,6 +62,23 @@ impl Drop for JsVar {
 pub struct JsString(JsVar);
 
 impl JsString {
+    /// Allocate a new javascript string from a Rust string slice.
+    #[cfg(feature = "wasm-bindgen")]
+    pub fn new(string: &str) -> JsString {
+        // around the right amount of memory
+        let mut utf16 = Vec::with_capacity(string.len());
+        for c in string.encode_utf16() {
+            utf16.push(c);
+        }
+        //
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_string(p: u32, l: u32) -> u32;
+        }
+        let string = _cala_js_string(utf16.as_ptr() as u32, utf16.len() as u32);
+        JsString(JsVar(string))
+    }
+
     /// Allocate a new javascript string from a Rust string slice.
     #[cfg(feature = "stdweb")]
     pub fn new(string: &str) -> JsString {
@@ -98,13 +135,35 @@ impl JsFn {
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
     #[allow(unsafe_code)]
+    #[cfg(feature = "wasm-bindgen")]
+    pub unsafe fn new(string: &str) -> JsFn {
+        #[wasm_bindgen]
+        extern {
+            // Execute some JavaScript string.
+            fn _cala_js_function(idx: u32) -> u32;
+        }
+
+        let javascript = format!("\
+            \"use strict\";\
+            let offset = _cala_stack.length;\
+            _cala_stack.push(function(param_a, param_b) {{ {} return 4294967295; }});\
+            return offset;\
+        ", string);
+
+        let string = JsString::new(&javascript);
+        let func = _cala_js_function(string.as_var().0);
+
+        JsFn(func)
+    }
+
+    /// Define a function (two parameters param_a: u32, and param_b: u32,
+    /// returns a u32)
+    #[allow(unsafe_code)]
     #[cfg(feature = "stdweb")]
     pub unsafe fn new(string: &str) -> JsFn {
         let javascript = format!("\
             \"use strict\";\
-            let offset = _cala_stack.length;
-            _cala_stack.push(function(param_a, param_b) {{ {} return 4294967295; }});\
-            return offset;\
+            return function(param_a, param_b) {{ {} return 4294967295; }};\
         ", string);
 
         let string = JsString::new(&javascript);
@@ -127,7 +186,7 @@ impl JsFn {
 
         let javascript = format!("\
             \"use strict\";\
-            let offset = _cala_stack.length;
+            let offset = _cala_stack.length;\
             _cala_stack.push(function(param_a, param_b) {{ {} return 4294967295; }});\
             return offset;\
         ", string);
@@ -136,6 +195,31 @@ impl JsFn {
         let func = _cala_js_function(string.as_var().0);
 
         JsFn(func)
+    }
+    
+    /// Call a JavaScript function.
+    #[allow(unsafe_code)]
+    #[cfg(feature = "wasm-bindgen")]
+    pub unsafe fn call(
+        &self,
+        a: Option<&JsVar>,
+        b: Option<&JsVar>,
+    ) -> Option<JsVar> {
+        #[wasm_bindgen]
+        extern {
+            // A generic javascript shim
+            fn _cala_js_call(function: u32, param_a: u32, param_b: u32) -> u32;
+        }
+        let ret = _cala_js_call(
+            self.0,
+            a.map(|x| x.0).unwrap_or(u32::MAX),
+            b.map(|x| x.0).unwrap_or(u32::MAX),
+        );
+        if ret == u32::MAX {
+            None
+        } else {
+            Some(JsVar(ret))
+        }
     }
 
     /// Call a JavaScript function.
@@ -166,9 +250,10 @@ impl JsFn {
     ) -> Option<JsVar> {
         extern "C" {
             // A generic javascript shim
-            fn _cala_js_call(function: u32, idx: u32) -> u32;
+            fn _cala_js_call(function: u32, param_a: u32, param_b: u32) -> u32;
         }
         let ret = _cala_js_call(
+            self.0,
             a.map(|x| x.0).unwrap_or(u32::MAX),
             b.map(|x| x.0).unwrap_or(u32::MAX),
         );

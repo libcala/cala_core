@@ -1,0 +1,12 @@
+[package]
+name = "cala-stdweb"
+version = "0.1.0"
+authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
+edition = "2018"
+description = "Cala Core Example program"
+repository = "https://github.com/libcala/cala_core"
+license = "CC0"
+
+[dependencies.cala_core]
+path = "../../"
+features = ["stdweb"]

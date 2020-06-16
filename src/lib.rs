@@ -42,7 +42,7 @@
 
 #[cfg(feature = "stdweb")]
 #[macro_use]
-pub extern crate stdweb;
+extern crate stdweb;
 
 pub mod os;
 
@@ -68,58 +68,11 @@ pub enum ExitStatus {
 macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
+            use super::*;
+        
             #[allow(unsafe_code)]
             #[no_mangle]
             extern "C" fn wasm_main() -> i32 {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => 0,
-                    $crate::ExitStatus::Failure => 1,
-                }
-            }
-        }
-    };
-}
-
-/// Set a function as the entry point for the program.
-#[cfg(all(target_arch = "wasm32", feature = "stdweb"))]
-#[macro_export]
-macro_rules! main {
-    ($main:expr) => {
-        use $crate::stdweb::{self, *};
-    
-        mod __cala_core_macro_generated {
-            use super::*;
-
-            #[js_export]
-            fn wasm_memory() -> Value {
-                let value: Value = js! {
-                    return Module.instance.exports.memory;
-                };
-                value
-            }
-
-            #[stdweb::js_export]
-            fn wasm_main() -> i32 {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => 0,
-                    $crate::ExitStatus::Failure => 1,
-                }
-            }
-        }
-    };
-}
-
-/// Set a function as the entry point for the program.
-#[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
-#[macro_export]
-macro_rules! main {
-    ($main:expr) => {
-        mod __cala_core_macro_generated {
-            #[cfg(feature = "")]
-            #[wasm_bindgen::prelude::wasm_bindgen]
-            #[allow(unsafe_code)]
-            #[doc = "Called from javascript"]
-            pub fn wasm_main() -> i32 {
                 match $main($crate::System) {
                     $crate::ExitStatus::Success => 0,
                     $crate::ExitStatus::Failure => 1,
@@ -135,6 +88,8 @@ macro_rules! main {
 macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
+            use super::*;
+        
             /// Called from NativeActivity JNI
             #[no_mangle]
             pub extern "C" fn android_main(
@@ -154,6 +109,8 @@ macro_rules! main {
 macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
+            use super::*;
+        
             /// Called from Windows Runtime
             #[no_mangle]
             pub extern "C" fn wWinMain(
@@ -180,6 +137,8 @@ macro_rules! main {
 macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
+            use super::*;
+        
             /// Called from OS
             #[no_mangle]
             pub extern "C" fn main(
