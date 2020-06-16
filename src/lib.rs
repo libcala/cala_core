@@ -11,7 +11,7 @@
 //! Add the following to your `Cargo.toml`:
 //! ```toml
 //! [dependencies.cala_core]
-//! version = "0.0.1"
+//! version = "0.1.0"
 //! ```
 //!
 //! ```rust
@@ -23,7 +23,7 @@
     html_favicon_url = "https://raw.githubusercontent.com/libcala/cala_core/master/res/logo.svg",
     html_root_url = "https://docs.rs/cala_core"
 )]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(
     anonymous_parameters,
     missing_copy_implementations,
@@ -39,3 +39,158 @@
     unused_qualifications,
     variant_size_differences
 )]
+
+#[cfg(feature = "stdweb")]
+#[macro_use]
+pub extern crate stdweb;
+
+pub mod os;
+
+/// System Interface
+#[derive(Debug, Copy, Clone)]
+pub struct System;
+
+/// Exit status
+#[derive(Debug, Copy, Clone)]
+pub enum ExitStatus {
+    /// Program succeeded
+    Success,
+    /// Program failed
+    Failure,
+}
+
+/// Set a function as the entry point for the program.
+#[cfg(all(
+    target_arch = "wasm32",
+    not(any(feature = "stdweb", feature = "wasm-bindgen"))
+))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        mod __cala_core_macro_generated {
+            #[allow(unsafe_code)]
+            #[no_mangle]
+            extern "C" fn wasm_main() -> i32 {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => 0,
+                    $crate::ExitStatus::Failure => 1,
+                }
+            }
+        }
+    };
+}
+
+/// Set a function as the entry point for the program.
+#[cfg(all(target_arch = "wasm32", feature = "stdweb"))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        use $crate::stdweb::{self, *};
+    
+        mod __cala_core_macro_generated {
+            use super::*;
+
+            #[js_export]
+            fn wasm_memory() -> Value {
+                let value: Value = js! {
+                    return Module.instance.exports.memory;
+                };
+                value
+            }
+
+            #[stdweb::js_export]
+            fn wasm_main() -> i32 {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => 0,
+                    $crate::ExitStatus::Failure => 1,
+                }
+            }
+        }
+    };
+}
+
+/// Set a function as the entry point for the program.
+#[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        mod __cala_core_macro_generated {
+            #[cfg(feature = "")]
+            #[wasm_bindgen::prelude::wasm_bindgen]
+            #[allow(unsafe_code)]
+            #[doc = "Called from javascript"]
+            pub fn wasm_main() -> i32 {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => 0,
+                    $crate::ExitStatus::Failure => 1,
+                }
+            }
+        }
+    };
+}
+
+/// Set a function as the entry point for the program.
+#[cfg(all(target_os = "android", not(target_arch = "wasm32")))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        mod __cala_core_macro_generated {
+            /// Called from NativeActivity JNI
+            #[no_mangle]
+            pub extern "C" fn android_main(
+                state: *mut c_void, /*AndroidApp*/
+            ) -> () {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => (),
+                    $crate::ExitStatus::Failure => (),
+                }
+            }
+        }
+    };
+}
+/// Set a function as the entry point for the program.
+#[cfg(all(target_os = "windows", not(target_arch = "wasm32")))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        mod __cala_core_macro_generated {
+            /// Called from Windows Runtime
+            #[no_mangle]
+            pub extern "C" fn wWinMain(
+                _h_instance: *mut c_void,
+                _h_prev_instance: *mut c_void,
+                _p_cmd_line: *mut u16,
+                _n_cmd_show: c_int,
+            ) -> c_int {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => 0,
+                    $crate::ExitStatus::Failure => 1,
+                }
+            }
+        }
+    };
+}
+/// Set a function as the entry point for the program.
+#[cfg(not(any(
+    target_arch = "wasm32",
+    target_os = "android",
+    target_os = "windows",
+)))]
+#[macro_export]
+macro_rules! main {
+    ($main:expr) => {
+        mod __cala_core_macro_generated {
+            /// Called from OS
+            #[no_mangle]
+            pub extern "C" fn main(
+                _argc: std::os::raw::c_int,
+                _argv: *const *const std::os::raw::c_char,
+            ) -> std::os::raw::c_int {
+                match $main($crate::System) {
+                    $crate::ExitStatus::Success => 0,
+                    $crate::ExitStatus::Failure => 1,
+                }
+            }
+        }
+    };
+}

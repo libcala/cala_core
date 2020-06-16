@@ -23,7 +23,13 @@ keywords = []
 readme = "README.md"
 edition = "2018"
 
-[dependencies]
+[dependencies.stdweb]
+version = "0.4"
+optional = true
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
 
 [build-dependencies]
 
@@ -32,3 +38,6 @@ edition = "2018"
 [package.metadata.docs.rs]
 all-features = true
 default-target = "x86_64-unknown-linux-gnu"
+
+[features]
+default = []

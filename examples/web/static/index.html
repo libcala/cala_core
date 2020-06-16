@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" name="viewport" />
+    <title>Cala Core Example</title>
+    <link rel="icon" href="res/logo.svg">
+<script>
+var Module = {};
+var __cargo_web = {};
+Object.defineProperty( Module, 'canvas', {
+    get: function() {
+        if( __cargo_web.canvas ) {
+            return __cargo_web.canvas;
+        }
+
+        var canvas = document.createElement( 'canvas' );
+        document.querySelector( 'body' ).appendChild( canvas );
+        __cargo_web.canvas = canvas;
+
+        return canvas;
+    }
+});
+</script>
+</head>
+<body>
+    <script src="web.js"></script>
+    <!-- This is the extra needed code to call into the library -->
+<script>
+var _cala_inst = null;
+var _cala_stack = new Array();
+var _cala_heap = new Array();
+var _cala_garbage = new Array();
+function _cala_js_malloc(o) {
+    if(_cala_garbage.length != 0) {
+    let idx = _cala_garbage.pop();
+        _cala_heap[idx] = o;
+        return idx;
+    } else {
+        let idx = _cala_heap.length;
+        _cala_heap.push(o);
+        return idx;
+    }
+}
+function _cala_js_string(p,l) {
+    var buf = new Uint16Array(_cala_inst().buffer,p,l);
+    var str = "";
+    for(var i = 0; i < l; i++) {
+        str += String.fromCharCode(buf[i]);
+    }
+    let tmp = _cala_js_malloc(str);
+    return tmp;
+}
+function _cala_js_function(i) { return Function(_cala_heap[i])(); }
+function _cala_js_call(f, a, b) { return _cala_stack[f](_cala_heap[a], _cala_heap[b]); }
+function _cala_js_free(i) { return _cala_garbage.push(i); }
+
+Rust.web.then( function(lib) {
+    _cala_inst = lib.wasm_memory;
+    lib.wasm_main();
+});
+</script>
+</body>
+</html>
