@@ -72,11 +72,8 @@ macro_rules! main {
         
             #[allow(unsafe_code)]
             #[no_mangle]
-            extern "C" fn wasm_main() -> i32 {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => 0,
-                    $crate::ExitStatus::Failure => 1,
-                }
+            pub extern "C" fn wasm_main() {
+                $main($crate::System);
             }
         }
     };
@@ -136,20 +133,8 @@ macro_rules! main {
 #[macro_export]
 macro_rules! main {
     ($main:expr) => {
-        mod __cala_core_macro_generated {
-            use super::*;
-        
-            /// Called from OS
-            #[no_mangle]
-            pub extern "C" fn main(
-                _argc: std::os::raw::c_int,
-                _argv: *const *const std::os::raw::c_char,
-            ) -> std::os::raw::c_int {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => 0,
-                    $crate::ExitStatus::Failure => 1,
-                }
-            }
+        fn main() {
+            $main($crate::System);
         }
     };
 }

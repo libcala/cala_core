@@ -26,6 +26,122 @@ pub fn _cala_memory() -> JsValue {
 #[derive(Debug)]
 pub struct JsVar(u32);
 
+impl JsVar {
+    #![allow(unsafe_code)]
+
+    /// Assume the variable is an array and copy into Rust `Vec`.
+    pub unsafe fn as_vec<T>(&self) -> Vec<T> {
+        match std::mem::size_of::<T>() {
+            1 => {
+                let mut output = Vec::new();
+                let length = self.vec8(&mut output, 0); // Query size
+                let written = self.vec8(&mut output, length); // Write data
+                debug_assert_eq!(length, written);
+                output
+            },
+            2 => {
+                let mut output = Vec::new();
+                let length = self.vec16(&mut output, 0); // Query size
+                let written = self.vec16(&mut output, length); // Write data
+                debug_assert_eq!(length, written);
+                output
+            },
+            4 => {
+                let mut output = Vec::new();
+                let length = self.vec32(&mut output, 0); // Query size
+                let written = self.vec32(&mut output, length); // Write data
+                debug_assert_eq!(length, written);
+                output
+            },
+            s => panic!("Bad data size ({}), want 1, 2, or 4", s),
+        }
+    }
+    
+    #[cfg(feature = "wasm-bindgen")]
+    unsafe fn vec8<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_read8(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read8(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    unsafe fn vec8<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        js! {
+            return _cala_js_read8(
+                @{self.0},
+                @{output.as_ptr() as u32},
+                @{length}
+            );
+        }
+    }
+    
+    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    unsafe fn vec8<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        extern "C" {
+            fn _cala_js_read8(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read8(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(feature = "wasm-bindgen")]
+    unsafe fn vec16<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_read16(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read16(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    unsafe fn vec16<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        js! {
+            return _cala_js_read16(
+                @{self.0},
+                @{output.as_ptr() as u32},
+                @{length}
+            );
+        }
+    }
+    
+    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    unsafe fn vec16<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        extern "C" {
+            fn _cala_js_read16(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read16(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(feature = "wasm-bindgen")]
+    unsafe fn vec32<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_read32(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read32(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    unsafe fn vec32<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        js! {
+            return _cala_js_read32(
+                @{self.0},
+                @{output.as_ptr() as u32},
+                @{length}
+            );
+        }
+    }
+    
+    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    unsafe fn vec32<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        extern "C" {
+            fn _cala_js_read32(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_read32(self.0, output.as_ptr() as u32, length)
+    }
+}
+
 impl Drop for JsVar {
     #[cfg(feature = "wasm-bindgen")]
     fn drop(&mut self) {
@@ -187,7 +303,7 @@ impl JsFn {
         let javascript = format!("\
             \"use strict\";\
             let offset = _cala_stack.length;\
-            _cala_stack.push(function(param_a, param_b) {{ {} return 4294967295; }});\
+            _cala_stack.push(function(param_a, param_b) {{ {} }});\
             return offset;\
         ", string);
 

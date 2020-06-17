@@ -10,6 +10,4 @@ main!(|_sys| {
     unsafe {
         assert!(alert.call(Some(message.as_var()), None).is_none());
     }
-
-    cala_core::ExitStatus::Success
 });
