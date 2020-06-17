@@ -12,7 +12,7 @@
 #[cfg(feature = "wasm-bindgen")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(feature = "stdweb")]
+#[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
 use stdweb::unstable::TryInto;
 
 /// 
@@ -37,7 +37,7 @@ impl Drop for JsVar {
         _cala_js_free(self.0);
     }
 
-    #[cfg(feature = "stdweb")]
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     fn drop(&mut self) {
         js! {
             _cala_js_free(@{self.0});
@@ -80,7 +80,7 @@ impl JsString {
     }
 
     /// Allocate a new javascript string from a Rust string slice.
-    #[cfg(feature = "stdweb")]
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     pub fn new(string: &str) -> JsString {
         // around the right amount of memory
         let mut utf16 = Vec::with_capacity(string.len());
@@ -159,7 +159,7 @@ impl JsFn {
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
     #[allow(unsafe_code)]
-    #[cfg(feature = "stdweb")]
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     pub unsafe fn new(string: &str) -> JsFn {
         let javascript = format!("\
             \"use strict\";\
@@ -224,7 +224,7 @@ impl JsFn {
 
     /// Call a JavaScript function.
     #[allow(unsafe_code)]
-    #[cfg(feature = "stdweb")]
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     pub unsafe fn call(
         &self,
         a: Option<&JsVar>,

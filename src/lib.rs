@@ -40,7 +40,7 @@
     variant_size_differences
 )]
 
-#[cfg(feature = "stdweb")]
+#[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
 #[macro_use]
 extern crate stdweb;
 
