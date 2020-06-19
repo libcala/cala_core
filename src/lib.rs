@@ -50,7 +50,7 @@ pub mod os;
 #[derive(Debug, Copy, Clone)]
 pub struct System;
 
-/// Set a function as the entry point for the program.
+/// Set an asynchronous function as the entry point for the program.
 #[cfg(all(
     target_arch = "wasm32",
     not(any(feature = "stdweb", feature = "wasm-bindgen"))
@@ -60,11 +60,19 @@ macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
             use super::*;
-        
-            #[allow(unsafe_code)]
+
+            thread_local!(
+                static FUTURE: std::cell::RefCell<
+                    std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>,
+                > = std::cell::RefCell::new(Box::pin($main));
+                static EXECUTOR: $crate::os::web::JsExec =
+                    $crate::os::web::JsExec::new(&FUTURE);
+            );
+
             #[no_mangle]
-            pub extern "C" fn wasm_main() {
-                $main($crate::System);
+            #[allow(unsafe_code)]
+            pub extern "C" fn wasm_wake() {
+                EXECUTOR.with(|executor| executor.wake());
             }
         }
     };
@@ -77,7 +85,7 @@ macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
             use super::*;
-        
+
             /// Called from NativeActivity JNI
             #[no_mangle]
             pub extern "C" fn android_main(
@@ -95,7 +103,7 @@ macro_rules! main {
     ($main:expr) => {
         mod __cala_core_macro_generated {
             use super::*;
-        
+
             /// Called from Windows Runtime
             #[no_mangle]
             pub extern "C" fn wWinMain(
