@@ -29,27 +29,49 @@ pub struct JsVar(u32);
 impl JsVar {
     #![allow(unsafe_code)]
 
+    /// Assume the variable is a string and copy into Rust `Vec`.
+    pub unsafe fn as_str<T>(&self) -> Vec<T> {
+        match std::mem::size_of::<T>() {
+            2 => {
+                let mut output = Vec::new();
+                let length = self.vec16(&mut output, 0); // Query size
+                output.reserve_exact(length as usize);
+                let written = self.vecstr(&mut output, length); // Write data
+                output.set_len(written as usize);
+                debug_assert_eq!(length, written);
+                output
+            },
+            s => panic!("Bad data size ({}), want 2 (UTF-16)", s),
+        }
+    }
+
     /// Assume the variable is an array and copy into Rust `Vec`.
     pub unsafe fn as_vec<T>(&self) -> Vec<T> {
         match std::mem::size_of::<T>() {
             1 => {
                 let mut output = Vec::new();
                 let length = self.vec8(&mut output, 0); // Query size
+                output.reserve_exact(length as usize);
                 let written = self.vec8(&mut output, length); // Write data
+                output.set_len(written as usize);
                 debug_assert_eq!(length, written);
                 output
             },
             2 => {
                 let mut output = Vec::new();
                 let length = self.vec16(&mut output, 0); // Query size
+                output.reserve_exact(length as usize);
                 let written = self.vec16(&mut output, length); // Write data
+                output.set_len(written as usize);
                 debug_assert_eq!(length, written);
                 output
             },
             4 => {
                 let mut output = Vec::new();
                 let length = self.vec32(&mut output, 0); // Query size
+                output.reserve_exact(length as usize);
                 let written = self.vec32(&mut output, length); // Write data
+                output.set_len(written as usize);
                 debug_assert_eq!(length, written);
                 output
             },
@@ -68,13 +90,14 @@ impl JsVar {
     
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     unsafe fn vec8<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
-        js! {
+        let ret = js! {
             return _cala_js_read8(
                 @{self.0},
                 @{output.as_ptr() as u32},
                 @{length}
             );
-        }
+        };
+        ret.try_into().unwrap()
     }
     
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
@@ -96,13 +119,14 @@ impl JsVar {
     
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     unsafe fn vec16<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
-        js! {
+        let ret = js! {
             return _cala_js_read16(
                 @{self.0},
                 @{output.as_ptr() as u32},
                 @{length}
             );
-        }
+        };
+        ret.try_into().unwrap()
     }
     
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
@@ -124,13 +148,14 @@ impl JsVar {
     
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     unsafe fn vec32<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
-        js! {
+        let ret = js! {
             return _cala_js_read32(
                 @{self.0},
                 @{output.as_ptr() as u32},
                 @{length}
             );
-        }
+        };
+        ret.try_into().unwrap()
     }
     
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
@@ -139,6 +164,35 @@ impl JsVar {
             fn _cala_js_read32(idx: u32, p: u32, l: u32) -> u32;
         }
         _cala_js_read32(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(feature = "wasm-bindgen")]
+    unsafe fn vecstr<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        #[wasm_bindgen]
+        extern {
+            fn _cala_js_readstr(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_readstr(self.0, output.as_ptr() as u32, length)
+    }
+    
+    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    unsafe fn vecstr<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        let ret = js! {
+            return _cala_js_readstr(
+                @{self.0},
+                @{output.as_ptr() as u32},
+                @{length}
+            );
+        };
+        ret.try_into().unwrap()
+    }
+    
+    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    unsafe fn vecstr<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
+        extern "C" {
+            fn _cala_js_readstr(idx: u32, p: u32, l: u32) -> u32;
+        }
+        _cala_js_readstr(self.0, output.as_ptr() as u32, length)
     }
 }
 
@@ -245,7 +299,7 @@ impl JsString {
 
 /// A JavaScript Function.
 #[derive(Debug)]
-pub struct JsFn(u32);
+pub struct JsFn(JsVar);
 
 impl JsFn {
     /// Define a function (two parameters param_a: u32, and param_b: u32,
@@ -261,15 +315,13 @@ impl JsFn {
 
         let javascript = format!("\
             \"use strict\";\
-            let offset = _cala_stack.length;\
-            _cala_stack.push(function(param_a, param_b) {{ {} return 4294967295; }});\
-            return offset;\
+            return function(param_a, param_b) {{ {} }};\
         ", string);
 
         let string = JsString::new(&javascript);
         let func = _cala_js_function(string.as_var().0);
 
-        JsFn(func)
+        JsFn(JsVar(func))
     }
 
     /// Define a function (two parameters param_a: u32, and param_b: u32,
@@ -279,7 +331,7 @@ impl JsFn {
     pub unsafe fn new(string: &str) -> JsFn {
         let javascript = format!("\
             \"use strict\";\
-            return function(param_a, param_b) {{ {} return 4294967295; }};\
+            return function(param_a, param_b) {{ {} }};\
         ", string);
 
         let string = JsString::new(&javascript);
@@ -287,7 +339,7 @@ impl JsFn {
             return _cala_js_function(@{string.as_var().0});
         };
 
-        JsFn(func.try_into().unwrap())
+        JsFn(JsVar(func.try_into().unwrap()))
     }
 
     /// Define a function (two parameters param_a: u32, and param_b: u32,
@@ -302,15 +354,13 @@ impl JsFn {
 
         let javascript = format!("\
             \"use strict\";\
-            let offset = _cala_stack.length;\
-            _cala_stack.push(function(param_a, param_b) {{ {} }});\
-            return offset;\
+            return function(param_a, param_b) {{ {} }};\
         ", string);
 
         let string = JsString::new(&javascript);
         let func = _cala_js_function(string.as_var().0);
 
-        JsFn(func)
+        JsFn(JsVar(func))
     }
     
     /// Call a JavaScript function.
@@ -327,7 +377,7 @@ impl JsFn {
             fn _cala_js_call(function: u32, param_a: u32, param_b: u32) -> u32;
         }
         let ret = _cala_js_call(
-            self.0,
+            (self.0).0,
             a.map(|x| x.0).unwrap_or(u32::MAX),
             b.map(|x| x.0).unwrap_or(u32::MAX),
         );
@@ -347,7 +397,7 @@ impl JsFn {
         b: Option<&JsVar>,
     ) -> Option<JsVar> {
         let ret = js! {
-            return _cala_js_call(@{self.0}, @{a.map(|x| x.0).unwrap_or(u32::MAX)}, @{b.map(|x| x.0).unwrap_or(u32::MAX)});
+            return _cala_js_call(@{(self.0).0}, @{a.map(|x| x.0).unwrap_or(u32::MAX)}, @{b.map(|x| x.0).unwrap_or(u32::MAX)});
         };
         if ret == u32::MAX {
             None
@@ -369,7 +419,7 @@ impl JsFn {
             fn _cala_js_call(function: u32, param_a: u32, param_b: u32) -> u32;
         }
         let ret = _cala_js_call(
-            self.0,
+            (self.0).0,
             a.map(|x| x.0).unwrap_or(u32::MAX),
             b.map(|x| x.0).unwrap_or(u32::MAX),
         );
@@ -385,66 +435,3 @@ impl JsFn {
 impl Drop for JsFn {
     fn drop(&mut self) {}
 }
-
-/*/// Inject JavaScript into the DOM.
-pub fn inject_js(code: &str) {
-    #[cfg(feature = "stdweb")] {
-        use stdweb::web;
-
-        stdweb::initialize();
-
-        js! {
-            let offset = _cala_stack.length;
-            _cala_stack.push(function(p) { alert("Hello, World!"); return -1; });
-            return offset;
-        }
-
-        web::alert(&format!("Cargo Web: {}", code));
-    }
-
-    #[cfg(feature = "wasm-bindgen")] {
-        use wasm_bindgen::prelude::*;
-
-        #[wasm_bindgen]
-        extern "C" {
-            fn alert(s: &str);
-        }
-
-        alert(&format!("Wasm Bindgen: {}", code));
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
-    #[allow(unsafe_code)]
-    {
-        extern "C" {
-            // Turn Rust UTF-16 String Into JavaScript String.
-            fn _cala_js_string(p: u32, l: u32) -> u32;
-            // Execute some JavaScript string.
-            fn _cala_function(idx: u32) -> u32;
-            // Free a JavaScript object
-            fn _cala_js_free(idx: u32) -> ();
-            // A generic javascript shim
-            fn _cala_call(function: u32, idx: u32) -> u32;
-        }
-
-        unsafe {
-            // Load library into memory
-            let javascript = "\
-                \"use strict\";\
-                let offset = _cala_stack.length;
-                _cala_stack.push(function(p) { alert('Hello, World!'); return -1; });\
-                return offset;\
-            ";
-            let mut utf16 = Vec::with_capacity(javascript.len()); // around the right amount of memory
-            for c in javascript.encode_utf16() {
-                utf16.push(c);
-            }
-            let string = _cala_js_string(utf16.as_ptr() as u32, utf16.len() as u32);
-            let offset = _cala_function(string);
-            _cala_js_free(string);
-
-            // Call the library function.
-            _cala_call(offset, u32::MAX);
-        }
-    }
-}*/

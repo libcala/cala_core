@@ -1,0 +1,10 @@
+# Cala Project File
+edition: 2018
+version: 0.1.0
+webpage: https://cala_core.libcala.github.io/examples/webapp
+label: res/label.muon
+icon: ../../res/icon.svg
+author:=Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+
+deps: cala_core
+    path: ../../

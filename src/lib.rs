@@ -50,15 +50,6 @@ pub mod os;
 #[derive(Debug, Copy, Clone)]
 pub struct System;
 
-/// Exit status
-#[derive(Debug, Copy, Clone)]
-pub enum ExitStatus {
-    /// Program succeeded
-    Success,
-    /// Program failed
-    Failure,
-}
-
 /// Set a function as the entry point for the program.
 #[cfg(all(
     target_arch = "wasm32",
@@ -92,10 +83,7 @@ macro_rules! main {
             pub extern "C" fn android_main(
                 state: *mut c_void, /*AndroidApp*/
             ) -> () {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => (),
-                    $crate::ExitStatus::Failure => (),
-                }
+                $main($crate::System);
             }
         }
     };
@@ -116,10 +104,8 @@ macro_rules! main {
                 _p_cmd_line: *mut u16,
                 _n_cmd_show: c_int,
             ) -> c_int {
-                match $main($crate::System) {
-                    $crate::ExitStatus::Success => 0,
-                    $crate::ExitStatus::Failure => 1,
-                }
+                $main($crate::System);
+                0
             }
         }
     };

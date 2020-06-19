@@ -7,8 +7,6 @@ cargo install cargo-web
 ```
 
 ## Debugging
-You have to enable the "cala_core/stdweb" feature manually:
-
 ```bash
 cargo web start
 ```
