@@ -14,7 +14,7 @@ use std::{
     collections::HashMap,
     future::Future,
     pin::Pin,
-    task::{Context, RawWaker, RawWakerVTable, Waker, Poll},
+    task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
 };
 
 #[cfg(feature = "wasm-bindgen")]
@@ -299,7 +299,7 @@ impl JsVar {
         output.set_len(written as usize);
         debug_assert_eq!(length, written);
     }
-    
+
     /// Assume the variable is an array and copy into Rust `Vec`.
     pub unsafe fn read_ints(&self, output: &mut Vec<i32>) {
         let length = self.vec32i(output, 0); // Query size
@@ -308,7 +308,7 @@ impl JsVar {
         output.set_len(written as usize);
         debug_assert_eq!(length, written);
     }
-    
+
     /// Assume the variable is an array and copy into Rust `Vec`.
     pub unsafe fn read_floats(&self, output: &mut Vec<f32>) {
         let length = self.vec32f(output, 0); // Query size
@@ -317,7 +317,7 @@ impl JsVar {
         output.set_len(written as usize);
         debug_assert_eq!(length, written);
     }
-    
+
     /// Assume the variable is an array and copy into Rust `Vec`.
     pub unsafe fn read_doubles(&self, output: &mut Vec<f64>) {
         let length = self.vec64f(output, 0); // Query size
@@ -326,22 +326,22 @@ impl JsVar {
         output.set_len(written as usize);
         debug_assert_eq!(length, written);
     }
-    
+
     /// Assume the variable is an array and copy from Rust slice.
     pub unsafe fn write_bytes(&self, input: &[u8]) {
         self.slice8i(input);
     }
-    
+
     /// Assume the variable is an array and copy from Rust slice.
     pub unsafe fn write_ints(&self, input: &[i32]) {
         self.slice32i(input);
     }
-    
+
     /// Assume the variable is an array and copy from Rust slice.
     pub unsafe fn write_floats(&self, input: &[f32]) {
         self.slice32f(input);
     }
-    
+
     /// Assume the variable is an array and copy from Rust slice.
     pub unsafe fn write_doubles(&self, input: &[f64]) {
         self.slice64f(input);
@@ -375,7 +375,7 @@ impl JsVar {
         }
         _cala_js_read_bytes(self.0, output.as_mut_ptr() as u32, length)
     }
-    
+
     #[cfg(feature = "wasm-bindgen")]
     unsafe fn vec32i(&self, output: &mut Vec<i32>, length: u32) -> u32 {
         #[wasm_bindgen]
@@ -433,7 +433,7 @@ impl JsVar {
         }
         _cala_js_read_floats(self.0, output.as_mut_ptr() as u32, length)
     }
-    
+
     #[cfg(feature = "wasm-bindgen")]
     unsafe fn vec64f(&self, output: &mut Vec<f64>, length: u32) -> u32 {
         #[wasm_bindgen]
@@ -469,7 +469,11 @@ impl JsVar {
         extern "C" {
             fn _cala_js_write_bytes(j: i32, p: u32, l: u32) -> ();
         }
-        _cala_js_write_bytes(self.0, output.as_ptr() as u32, output.len() as u32)
+        _cala_js_write_bytes(
+            self.0,
+            output.as_ptr() as u32,
+            output.len() as u32,
+        )
     }
 
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
@@ -490,7 +494,7 @@ impl JsVar {
         }
         _cala_js_write_bytes(self.0, input.as_ptr() as u32, input.len() as u32)
     }
-    
+
     #[cfg(feature = "wasm-bindgen")]
     unsafe fn slice32i(&self, input: &[i32]) {
         #[wasm_bindgen]
@@ -546,14 +550,18 @@ impl JsVar {
         }
         _cala_js_write_floats(self.0, input.as_ptr() as u32, input.len() as u32)
     }
-    
+
     #[cfg(feature = "wasm-bindgen")]
     unsafe fn slice64f(&self, input: &[f64]) {
         #[wasm_bindgen]
         extern "C" {
             fn _cala_js_write_doubles(j: i32, p: u32, l: u32) -> ();
         }
-        _cala_js_write_doubles(self.0, input.as_ptr() as u32, input.len() as u32)
+        _cala_js_write_doubles(
+            self.0,
+            input.as_ptr() as u32,
+            input.len() as u32,
+        )
     }
 
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
@@ -572,7 +580,11 @@ impl JsVar {
         extern "C" {
             fn _cala_js_write_doubles(j: i32, p: u32, l: u32) -> ();
         }
-        _cala_js_write_doubles(self.0, input.as_ptr() as u32, input.len() as u32)
+        _cala_js_write_doubles(
+            self.0,
+            input.as_ptr() as u32,
+            input.len() as u32,
+        )
     }
 
     #[cfg(feature = "wasm-bindgen")]
@@ -634,7 +646,7 @@ impl JsVar {
         }
         _cala_js_waker(self.0)
     }
-    
+
     /// Poll a JavaScript Promise - Always return Pending if it's not a Promise.
     pub fn poll(&self) -> Poll<JsVar> {
         WAKERS.with(|w| {
@@ -649,7 +661,7 @@ impl JsVar {
             }
         })
     }
-    
+
     // Remove any state associated with ready promises on drop.
     fn drop_internal(&self) {
         WAKERS.with(|w| w.borrow_mut().remove(&self.0));
@@ -683,7 +695,7 @@ impl Drop for JsVar {
             // Free a JavaScript object
             fn _cala_js_free(idx: i32) -> ();
         }
-        
+
         self.drop_internal();
         unsafe {
             _cala_js_free(self.0);
@@ -703,13 +715,16 @@ impl JsString {
         extern "C" {
             fn _cala_js_text(p: u32, l: u32) -> i32;
         }
-    
+
         // around the right amount of memory
         let mut text = Vec::with_capacity(string.len());
         for c in string.encode_utf16() {
             text.push(c);
         }
-        JsString(JsVar(_cala_js_text(text.as_ptr() as u32, text.len() as u32)))
+        JsString(JsVar(_cala_js_text(
+            text.as_ptr() as u32,
+            text.len() as u32,
+        )))
     }
 
     /// Allocate a new javascript string from a Rust string slice.
@@ -734,7 +749,7 @@ impl JsString {
             // Turn Rust UTF-16 String Into JavaScript String.
             fn _cala_js_text(p: u32, l: u32) -> i32;
         }
-    
+
         // around the right amount of memory
         let mut text = Vec::with_capacity(string.len());
         for c in string.encode_utf16() {
@@ -909,8 +924,8 @@ impl Drop for JsFn {
 }
 
 thread_local!(
-    static FUTURE: RefCell<Option<Pin<Box<dyn Future<Output = ()>>>>>
-        = RefCell::new(None);
+    static FUTURE: RefCell<Option<Pin<Box<dyn Future<Output = ()>>>>> =
+        RefCell::new(None);
 );
 
 /// WASM is non-blocking, but after the function returns, the Future will be
