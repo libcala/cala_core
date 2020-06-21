@@ -25,13 +25,13 @@ function _cala_js_function(i) {
 function _cala_js_call(f, a, b) {
     let o = _cala_heap[f](_cala_heap[a], _cala_heap[b]);
     if(o == undefined) {
-        return 4294967295;
+        return -1;
     } else {
         return _cala_js_malloc(o);
     }
 }
 function _cala_js_free(i) { return _cala_garbage.push(i); }
-function _cala_js_readstr(j, p, l) {
+function _cala_js_read_text(j, p, l) {
     var buf = new Uint16Array(Module.instance.exports.memory.buffer,p,l);
     let get = _cala_heap[j];
     for(var i = 0; i < l; i++) {
@@ -39,7 +39,7 @@ function _cala_js_readstr(j, p, l) {
     }
     return get.length;
 }
-function _cala_js_read8(j, p, l) {
+function _cala_js_read_bytes(j, p, l) {
     var buf = new Uint8Array(Module.instance.exports.memory.buffer,p,l);
     let get = _cala_heap[j];
     for(var i = 0; i < l; i++) {
@@ -47,19 +47,42 @@ function _cala_js_read8(j, p, l) {
     }
     return get.length;
 }
-function _cala_js_read16(j, p, l) {
-    var buf = new Uint16Array(Module.instance.exports.memory.buffer,p,l);
+function _cala_js_read_ints(j, p, l) {
+    var buf = new Int32Array(Module.instance.exports.memory.buffer,p,l);
     let get = _cala_heap[j];
     for(var i = 0; i < l; i++) {
         buf[i] = get[i];
     }
     return get.length;
 }
-function _cala_js_read32(j, p, l) {
-    var buf = new Uint32Array(Module.instance.exports.memory.buffer,p,l);
+function _cala_js_read_floats(j, p, l) {
+    var buf = new Float32Array(Module.instance.exports.memory.buffer,p,l);
     let get = _cala_heap[j];
     for(var i = 0; i < l; i++) {
         buf[i] = get[i];
     }
     return get.length;
 }
+function _cala_js_read_doubles(j, p, l) {
+    var buf = new Float64Array(Module.instance.exports.memory.buffer,p,l);
+    let get = _cala_heap[j];
+    for(var i = 0; i < l; i++) {
+        buf[i] = get[i];
+    }
+    return get.length;
+}
+function _cala_js_waker(j) {
+    _cala_heap[j].then((o) => {
+        if(o == undefined || o == null) {
+            Module.instance.exports.wake(j, -1);
+        } else {
+            Module.instance.exports.wake(j, _cala_js_malloc(o))
+        }
+    });
+}
+function _cala_js_store_int(o) {{ return _cala_js_malloc(o); }}
+function _cala_js_load_int(o) {{ return _cala_heap[o]; }}
+function _cala_js_store_float(o) {{ return _cala_js_malloc(o); }}
+function _cala_js_load_float(o) {{ return _cala_heap[o]; }}
+function _cala_js_store_double(o) {{ return _cala_js_malloc(o); }}
+function _cala_js_load_double(o) {{ return _cala_heap[o]; }}

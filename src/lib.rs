@@ -56,23 +56,14 @@ pub struct System;
     not(any(feature = "stdweb", feature = "wasm-bindgen"))
 ))]
 #[macro_export]
-macro_rules! main {
-    ($main:expr) => {
+macro_rules! exec {
+    ($main:ident) => {
         mod __cala_core_macro_generated {
-            use super::*;
-
-            thread_local!(
-                static FUTURE: std::cell::RefCell<
-                    std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>,
-                > = std::cell::RefCell::new(Box::pin($main));
-                static EXECUTOR: $crate::os::web::JsExec =
-                    $crate::os::web::JsExec::new(&FUTURE);
-            );
-
+            // Web Assembly "main" function
             #[no_mangle]
-            #[allow(unsafe_code)]
-            pub extern "C" fn wasm_wake() {
-                EXECUTOR.with(|executor| executor.wake());
+            extern "C" fn wasm_main() {
+                $crate::os::web::panic_hook();
+                $crate::os::web::block_on(super::$main());
             }
         }
     };
