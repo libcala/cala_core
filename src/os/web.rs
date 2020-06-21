@@ -54,6 +54,7 @@ fn wake_internal(promise: i32, result: i32) {
 }
 
 #[cfg(feature = "wasm-bindgen")]
+#[doc = ""]
 #[wasm_bindgen]
 pub fn wake(promise: i32, result: i32) {
     wake_internal(promise, result);
@@ -256,7 +257,7 @@ impl JsVar {
     }
 
     #[cfg(feature = "wasm-bindgen")]
-    unsafe fn into_f64_internal(value: &JsVar) -> f32 {
+    unsafe fn into_f64_internal(value: &JsVar) -> f64 {
         #[wasm_bindgen]
         extern "C" {
             fn _cala_js_load_double(idx: i32) -> f64;
@@ -467,12 +468,12 @@ impl JsVar {
     unsafe fn slice8i(&self, input: &[u8]) {
         #[wasm_bindgen]
         extern "C" {
-            fn _cala_js_write_bytes(j: i32, p: u32, l: u32) -> ();
+            fn _cala_js_write_bytes(j: i32, p: u32, l: u32);
         }
         _cala_js_write_bytes(
             self.0,
-            output.as_ptr() as u32,
-            output.len() as u32,
+            input.as_ptr() as u32,
+            input.len() as u32,
         )
     }
 
@@ -499,7 +500,7 @@ impl JsVar {
     unsafe fn slice32i(&self, input: &[i32]) {
         #[wasm_bindgen]
         extern "C" {
-            fn _cala_js_write_ints(j: i32, p: u32, l: u32) -> ();
+            fn _cala_js_write_ints(j: i32, p: u32, l: u32);
         }
         _cala_js_write_ints(self.0, input.as_ptr() as u32, input.len() as u32)
     }
@@ -527,7 +528,7 @@ impl JsVar {
     unsafe fn slice32f(&self, input: &[f32]) {
         #[wasm_bindgen]
         extern "C" {
-            fn _cala_js_write_floats(j: i32, p: u32, l: u32) -> ();
+            fn _cala_js_write_floats(j: i32, p: u32, l: u32);
         }
         _cala_js_write_floats(self.0, input.as_ptr() as u32, input.len() as u32)
     }
@@ -555,7 +556,7 @@ impl JsVar {
     unsafe fn slice64f(&self, input: &[f64]) {
         #[wasm_bindgen]
         extern "C" {
-            fn _cala_js_write_doubles(j: i32, p: u32, l: u32) -> ();
+            fn _cala_js_write_doubles(j: i32, p: u32, l: u32);
         }
         _cala_js_write_doubles(
             self.0,
@@ -628,7 +629,7 @@ impl JsVar {
     unsafe fn set_waker_internal(&self) {
         #[wasm_bindgen]
         extern "C" {
-            fn _cala_js_waker(idx: u32);
+            fn _cala_js_waker(idx: i32);
         }
         _cala_js_waker(self.0)
     }
@@ -786,7 +787,7 @@ impl JsFn {
         #[wasm_bindgen]
         extern "C" {
             // Execute some JavaScript string.
-            fn _cala_js_function(idx: u32) -> u32;
+            fn _cala_js_function(idx: i32) -> i32;
         }
 
         let javascript = format!(

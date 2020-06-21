@@ -50,11 +50,8 @@ pub mod os;
 #[derive(Debug, Copy, Clone)]
 pub struct System;
 
-/// Set an asynchronous function as the entry point for the program.
-#[cfg(all(
-    target_arch = "wasm32",
-    not(any(feature = "stdweb", feature = "wasm-bindgen"))
-))]
+/// **cala**: Set an asynchronous function as the entry point for the program.
+#[cfg(feature = "cala")]
 #[macro_export]
 macro_rules! exec {
     ($main:ident) => {
