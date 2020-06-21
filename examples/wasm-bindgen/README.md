@@ -9,8 +9,7 @@ This shows how to make a backend-agnostic web app with cala-core.
 
 ## Building The Package
 ```bash
-wasm-pack build --target web -d ./wasm-pack/pkg
-http ./wasm-pack/
+wasm-pack build --target web -d ./wasm-pack/pkg && http ./wasm-pack/
 ```
 
 Then open http://0.0.0.0:8000/

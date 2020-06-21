@@ -8,3 +8,4 @@ author:=Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 
 deps: cala_core
     path: ../../
+    feature: cala

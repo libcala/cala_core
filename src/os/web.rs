@@ -202,7 +202,8 @@ impl JsVar {
         let ret = js! {
             return _cala_js_load_float(@{value.0});
         };
-        ret.try_into().unwrap()
+        let ret: f64 = ret.try_into().unwrap();
+        ret as _
     }
 
     #[allow(unsafe_code)]

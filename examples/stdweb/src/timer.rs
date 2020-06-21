@@ -27,7 +27,7 @@ impl Future for JsTimer {
     type Output = i32;
 
     fn poll(self: Pin<&mut Self>, _cx: &mut Context) -> Poll<i32> {
-        if let Some(result) = cala_core::os::web::resolve_promise(&self.promise) {
+        if let Poll::Ready(result) = self.promise.poll() {
             Poll::Ready(unsafe { result.into_i32() })
         } else {
             unsafe { self.promise.set_waker() };
