@@ -63,13 +63,13 @@ pub fn wake(promise: i32, result: i32) {
 #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
 #[js_export]
 fn wake(promise: i32, result: i32) {
-    wake_internal(promise, result)
+    wake_internal(promise, result);
 }
 
 #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
 #[no_mangle]
 extern "C" fn wake(promise: i32, result: i32) {
-    wake_internal(promise, result)
+    wake_internal(promise, result);
 }
 
 /// A JavaScript variable.
@@ -78,6 +78,12 @@ pub struct JsVar(i32);
 
 impl JsVar {
     #![allow(unsafe_code)]
+
+    /// Assuming the JavaScript variable is a function with two parameters,
+    /// convert into a `JsFn`.
+    pub unsafe fn into_jsfn(self) -> JsFn {
+        JsFn(self)
+    }
 
     /// Create a new `JsVar` from a Rust integer
     pub fn from_i32(value: i32) -> JsVar {
@@ -471,11 +477,7 @@ impl JsVar {
         extern "C" {
             fn _cala_js_write_bytes(j: i32, p: u32, l: u32);
         }
-        _cala_js_write_bytes(
-            self.0,
-            input.as_ptr() as u32,
-            input.len() as u32,
-        )
+        _cala_js_write_bytes(self.0, input.as_ptr() as u32, input.len() as u32)
     }
 
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
@@ -918,11 +920,6 @@ impl JsFn {
             Some(JsVar(ret))
         }
     }
-}
-
-// So that `JsFn` doesn't accidentally implement `Copy`
-impl Drop for JsFn {
-    fn drop(&mut self) {}
 }
 
 thread_local!(

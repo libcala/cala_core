@@ -24,19 +24,19 @@ function _cala_js_copy(dst,src,len) {
 }
 function _cala_js_write_bytes(j,p,l) {
     var d = new Uint8Array(Module.instance.exports.memory.buffer,p,l);
-    _cala_js_copy(j,d,l);
+    _cala_js_copy(_cala_heap[j],d,l);
 }
 function _cala_js_write_ints(j,p,l) {
     var d = new Int32Array(Module.instance.exports.memory.buffer,p,l);
-    _cala_js_copy(j,d,l);
+    _cala_js_copy(_cala_heap[j],d,l);
 }
 function _cala_js_write_floats(j,p,l) {
     var d = new Float32Array(Module.instance.exports.memory.buffer,p,l);
-    _cala_js_copy(j,d,l);
+    _cala_js_copy(_cala_heap[j],d,l);
 }
 function _cala_js_write_doubles(j,p,l) {
     var d = new Float64Array(Module.instance.exports.memory.buffer,p,l);
-    _cala_js_copy(j,d,l);
+    _cala_js_copy(_cala_heap[j],d,l);
 }
 function _cala_js_function(i) {
     return _cala_js_malloc(Function(_cala_heap[i])());
