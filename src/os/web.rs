@@ -10,6 +10,7 @@
 //! Web-Specific APIs
 
 use std::{
+    marker::PhantomData,
     cell::RefCell,
     collections::HashMap,
     future::Future,
@@ -23,33 +24,17 @@ use wasm_bindgen::prelude::*;
 #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
 use stdweb::unstable::TryInto;
 
-enum Promise {
-    None,
-    Waker,
-    Value(JsVar),
+thread_local! {
+    // A map of the resolved promises / ready futures
+    static READY: RefCell<HashMap<i32, JsVar>> = RefCell::new(HashMap::new())
 }
 
-impl Promise {
-    fn take(&mut self) -> Promise {
-        let mut ret = Promise::None;
-        std::mem::swap(self, &mut ret);
-        ret
-    }
-}
-
-thread_local!(static WAKERS: RefCell<HashMap<i32, Promise>> = RefCell::new(HashMap::new()));
-
-// Implementation of waking of `Future`s.
+// Run whenever a Promise resolves.
 #[allow(unsafe_code)]
 fn wake_internal(promise: i32, result: i32) {
-    let result = JsVar(result);
-    WAKERS.with(|w| {
-        if let Some(wakers) = w.borrow_mut().get_mut(&promise) {
-            if let Promise::Waker = wakers.take() {
-                *wakers = Promise::Value(result);
-            }
-        }
-    });
+    // Promise resolving marks the future as "ready" with a value in the map.
+    READY.with(|w| w.borrow_mut().insert(promise, JsVar(result)));
+    // Promise resolving wakes the thread, so run the executor.
     executor();
 }
 
@@ -72,6 +57,23 @@ extern "C" fn wake(promise: i32, result: i32) {
     wake_internal(promise, result);
 }
 
+/// A JavaScript Promise
+#[derive(Debug)]
+pub struct JsPromise<T: From<JsVar>>(JsVar, PhantomData::<T>);
+
+impl<T: From<JsVar>> JsPromise<T> {
+    /// Poll a JavaScript Promise.
+    pub fn poll(&self) -> Poll<T> {
+        READY.with(|w| {
+            if let Some(value) = w.borrow_mut().remove(&(self.0).0) {
+                Poll::Ready(value.into())
+            } else {
+                Poll::Pending
+            }
+        })
+    }
+}
+
 /// A JavaScript variable.
 #[derive(Debug)]
 pub struct JsVar(i32);
@@ -79,9 +81,15 @@ pub struct JsVar(i32);
 impl JsVar {
     #![allow(unsafe_code)]
 
+    /// Assume the JavaScript variable is a promise, and convert to a JsPromise.
+    pub unsafe fn into_promise<T: From<JsVar>>(self) -> JsPromise<T> {
+        self.set_waker_internal();
+        JsPromise(self, PhantomData)
+    }
+
     /// Assuming the JavaScript variable is a function with two parameters,
     /// convert into a `JsFn`.
-    pub unsafe fn into_jsfn(self) -> JsFn {
+    pub unsafe fn into_fn(self) -> JsFn {
         JsFn(self)
     }
 
@@ -620,14 +628,6 @@ impl JsVar {
         _cala_js_read_text(self.0, output.as_ptr() as u32, length)
     }
 
-    /// Assume the variable is a `Promise` and prepare run the executor once
-    /// it has been resolved.  Because JavaScript has it's own executor, a
-    /// `Waker` is not required.
-    pub unsafe fn set_waker(&self) {
-        WAKERS.with(|w| w.borrow_mut().insert(self.0, Promise::Waker));
-        self.set_waker_internal();
-    }
-
     #[cfg(feature = "wasm-bindgen")]
     unsafe fn set_waker_internal(&self) {
         #[wasm_bindgen]
@@ -651,24 +651,9 @@ impl JsVar {
         _cala_js_waker(self.0)
     }
 
-    /// Poll a JavaScript Promise - Always return Pending if it's not a Promise.
-    pub fn poll(&self) -> Poll<JsVar> {
-        WAKERS.with(|w| {
-            if let Some(wakers) = w.borrow_mut().get_mut(&self.0) {
-                if let Promise::Value(value) = wakers.take() {
-                    Poll::Ready(value)
-                } else {
-                    Poll::Pending
-                }
-            } else {
-                Poll::Pending
-            }
-        })
-    }
-
     // Remove any state associated with ready promises on drop.
     fn drop_internal(&self) {
-        WAKERS.with(|w| w.borrow_mut().remove(&self.0));
+        READY.with(|w| w.borrow_mut().remove(&self.0));
     }
 }
 
@@ -768,7 +753,7 @@ impl JsString {
     pub fn as_var(&self) -> &JsVar {
         &self.0
     }
-
+    
     /// Turn a `JsVar` into a `JsString`.  This does no type-checking, therefore
     /// is unsafe.
     #[allow(unsafe_code)]
