@@ -9,6 +9,8 @@
 
 //! Web-Specific APIs
 
+#![allow(unsafe_code)]
+
 use std::{
     marker::PhantomData,
     cell::RefCell,
@@ -30,7 +32,6 @@ thread_local! {
 }
 
 // Run whenever a Promise resolves.
-#[allow(unsafe_code)]
 fn wake_internal(promise: i32, result: i32) {
     // Promise resolving marks the future as "ready" with a value in the map.
     READY.with(|w| w.borrow_mut().insert(promise, JsVar(result)));
@@ -79,8 +80,6 @@ impl<T: From<JsVar>> JsPromise<T> {
 pub struct JsVar(i32);
 
 impl JsVar {
-    #![allow(unsafe_code)]
-
     /// Assume the JavaScript variable is a promise, and convert to a JsPromise.
     pub unsafe fn into_promise<T: From<JsVar>>(self) -> JsPromise<T> {
         self.set_waker_internal();
@@ -119,7 +118,6 @@ impl JsVar {
         )
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     fn from_i32_internal(value: i32) -> Self {
         extern "C" {
@@ -151,7 +149,6 @@ impl JsVar {
         ret.try_into().unwrap()
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     unsafe fn into_i32_internal(value: &JsVar) -> i32 {
         extern "C" {
@@ -187,7 +184,6 @@ impl JsVar {
         )
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     fn from_f32_internal(value: f32) -> Self {
         extern "C" {
@@ -220,7 +216,6 @@ impl JsVar {
         ret as _
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     unsafe fn into_f32_internal(value: &JsVar) -> f32 {
         extern "C" {
@@ -256,7 +251,6 @@ impl JsVar {
         )
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     fn from_f64_internal(value: f64) -> Self {
         extern "C" {
@@ -288,7 +282,6 @@ impl JsVar {
         ret.try_into().unwrap()
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     unsafe fn into_f64_internal(value: &JsVar) -> f64 {
         extern "C" {
@@ -677,7 +670,6 @@ impl Drop for JsVar {
         }
     }
 
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     fn drop(&mut self) {
         extern "C" {
@@ -731,7 +723,6 @@ impl JsString {
     }
 
     /// Allocate a new javascript string from a Rust string slice.
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     pub fn new(string: &str) -> JsString {
         extern "C" {
@@ -756,7 +747,6 @@ impl JsString {
     
     /// Turn a `JsVar` into a `JsString`.  This does no type-checking, therefore
     /// is unsafe.
-    #[allow(unsafe_code)]
     pub unsafe fn from_var(var: JsVar) -> JsString {
         JsString(var)
     }
@@ -769,7 +759,6 @@ pub struct JsFn(JsVar);
 impl JsFn {
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
-    #[allow(unsafe_code)]
     #[cfg(feature = "wasm-bindgen")]
     pub unsafe fn new(string: &str) -> JsFn {
         #[wasm_bindgen]
@@ -794,7 +783,6 @@ impl JsFn {
 
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
-    #[allow(unsafe_code)]
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     pub unsafe fn new(string: &str) -> JsFn {
         let javascript = format!(
@@ -815,7 +803,6 @@ impl JsFn {
 
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     pub unsafe fn new(string: &str) -> JsFn {
         extern "C" {
@@ -838,7 +825,6 @@ impl JsFn {
     }
 
     /// Call a JavaScript function.
-    #[allow(unsafe_code)]
     #[cfg(feature = "wasm-bindgen")]
     pub unsafe fn call(
         &self,
@@ -863,7 +849,6 @@ impl JsFn {
     }
 
     /// Call a JavaScript function.
-    #[allow(unsafe_code)]
     #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
     pub unsafe fn call(
         &self,
@@ -883,7 +868,6 @@ impl JsFn {
     }
 
     /// Call a JavaScript function.
-    #[allow(unsafe_code)]
     #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
     pub unsafe fn call(
         &self,
@@ -939,7 +923,6 @@ fn executor() {
 /// Create a waker for the JavaScript executor - doesn't need any associated
 /// state.
 #[inline]
-#[allow(unsafe_code)]
 fn waker() -> Waker {
     #[inline]
     unsafe fn clone(data: *const ()) -> RawWaker {
@@ -962,7 +945,6 @@ fn waker() -> Waker {
     }
 }
 
-#[allow(unsafe_code)]
 fn panic_hook_internal(panic_info: &std::panic::PanicInfo<'_>) {
     let msg = panic_info.to_string();
 
