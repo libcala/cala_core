@@ -64,9 +64,9 @@ packages, so it may seem a little weird.
  - [ ] **x86_64-unknown-redox** (Redox App)
 
 ### Web
- - [ ] Static Web App
-   - [ ] wasm32-unknown-emscripten, **wasm32-unknown-unknown**
-   - [ ] **asmjs-unknown-emscripten** (fallback)
+ - [x] Static Web App
+   - [x] wasm32-unknown-emscripten, **wasm32-unknown-unknown**
+   - [x] **asmjs-unknown-emscripten** (fallback)
  - [ ] **wasm32-wasi** (WASI App)
 
 ### Windows

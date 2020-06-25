@@ -44,18 +44,32 @@
 #[macro_use]
 extern crate stdweb;
 
+#[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
+#[doc(hidden)]
+pub extern crate pasts;
+
 pub mod os;
 
-/// System Interface
-#[derive(Debug, Copy, Clone)]
-pub struct System;
-
 /// **cala**: Set an asynchronous function as the entry point for the program.
-#[cfg(feature = "cala")]
+#[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
 #[macro_export]
 macro_rules! exec {
     ($main:ident) => {
-        mod __cala_core_macro_generated {
+        fn main() {
+            use $crate::pasts::Executor;
+            static EXECUTOR: $crate::pasts::CvarExec
+                = $crate::pasts::CvarExec::new();
+            EXECUTOR.block_on($main());
+        }
+    };
+}
+
+/// **cala**: Set an asynchronous function as the entry point for the program.
+#[cfg(all(feature = "cala", target_arch = "wasm32"))]
+#[macro_export]
+macro_rules! exec {
+    ($main:ident) => {
+        mod main {
             // Web Assembly "main" function
             #[no_mangle]
             extern "C" fn wasm_main() {
@@ -66,7 +80,7 @@ macro_rules! exec {
     };
 }
 
-/// Set a function as the entry point for the program.
+/*/// Set a function as the entry point for the program.
 #[cfg(all(target_os = "android", not(target_arch = "wasm32")))]
 #[macro_export]
 macro_rules! main {
@@ -119,4 +133,4 @@ macro_rules! main {
             $main($crate::System);
         }
     };
-}
+}*/
