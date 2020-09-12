@@ -18,21 +18,24 @@ static mut CONTEXT: MaybeUninit<Context<'_>> = MaybeUninit::uninit();
 #[macro_export]
 macro_rules! start {
     () => {
+        #[allow(unused)]
+        fn main() {
+            _cala_core::start();
+        }
+
         mod _cala_core {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
-            #[no_mangle]
-            extern "C" fn main() {
-                // FIXME: Block on
-                todo!()
+            pub(super) fn start() {
+                $crate::_macro::start(Box::pin(super::start()))
             }
-            
+
             #[cfg(any(target_arch = "wasm32", target_os = "android"))]
             #[no_mangle]
-            extern "C" fn start() {
+            pub(super) extern "C" fn start() {
                 $crate::_macro::start(Box::pin(super::start()))
             }
         }
-    }
+    };
 }
 
 #[cfg(target_os = "android")]
@@ -46,6 +49,13 @@ pub(crate) unsafe fn start(start: PinFut) {
     WAKER = MaybeUninit::new(waker());
     CONTEXT = MaybeUninit::new(Context::from_waker(&*WAKER.as_ptr()));
     wake();
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+unsafe fn wake() {
+    let _ = (*FUTURE.as_mut_ptr())
+        .as_mut()
+        .poll(&mut *CONTEXT.as_mut_ptr());
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]

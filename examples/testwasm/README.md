@@ -14,8 +14,8 @@ cargo install wasm-snip
 # Build WASM
 ```bash
 cargo build --target wasm32-unknown-unknown --release
-wasm-opt --strip-debug target/wasm32-unknown-unknown/release/testwasm.wasm -o dst/testwasm.wasm
-wasm-snip --snip-rust-panicking-code --snip-rust-fmt-code dst/testwasm.wasm -o dst/testwasm.wasm
+wasm-opt --strip-debug target/wasm32-unknown-unknown/release/testwasm_lib.wasm -o dst/testwasm_lib.wasm
+wasm-snip --snip-rust-panicking-code --snip-rust-fmt-code dst/testwasm_lib.wasm -o dst/testwasm_lib.wasm
 ```
 
 # Run WASM

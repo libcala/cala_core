@@ -23,7 +23,7 @@ async function load(mod, imports) {
 	}
 }
 async function init(input) {
-	input = fetch(import.meta.url.replace(/\.js$/, '.wasm'));
+	input = fetch(import.meta.url.replace(/\.js$/, '_lib.wasm'));
 	const imports = { env: {
 		say: say
 	} };

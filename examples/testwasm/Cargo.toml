@@ -5,8 +5,13 @@ authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
 edition = "2018"
 
 [lib]
-path = "src/testwasm.rs"
+name = "testwasm_lib"
+path = "glue.rs"
 crate-type = ["cdylib"]
+
+[[bin]]
+name = "testwasm"
+path = "src/testwasm.rs"
 
 [dependencies.cala_core]
 path = "../../"

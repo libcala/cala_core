@@ -8,19 +8,49 @@
 // copied, modified, or distributed except according to those terms.
 
 //! # Getting Started
-//! Add the following to your `Cargo.toml`:
+//! Make a **/Cargo.toml**:
 //! ```toml
-//! [dependencies.cala_core]
+//! [package]
+//! name = "hello_world"
 //! version = "0.1.0"
+//! authors = ["Your Name <your@email.com>"]
+//! edition = "2018"
+//!
+//! [lib]
+//! name = "hello_world_lib"
+//! path = "glue.rs"
+//! crate-type = ["cdylib"]
+//!
+//! [[bin]]
+//! name = "hello_world"
+//! path = "src/hello_world.rs"
+//!
+//! [dependencies.cala_core]
+//! version = "0.2"
+//! default-features = false
+//! features = ["log"]
 //! ```
 //!
+//! A **/src/hello_world.rs**:
 //! ```rust
-//! // TODO
+//! #[macro_use]
+//! extern crate cala_core;
+//!
+//! start!();
+//! async fn start() {
+//!     log!("Hello, world!");
+//! }
+//! ```
+//!
+//! If you want to support WebAssembly and Android you'll also need
+//! **/glue.rs**:
+//! ```rust
+//! include!("src/hello_world.rs");
 //! ```
 
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/libcala/cala_core/master/res/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/libcala/cala_core/master/res/logo.svg",
+    html_logo_url = "https://rynvei.com/cala/logo.svg",
+    html_favicon_url = "https://rynvei.com/cala/icon.svg",
     html_root_url = "https://docs.rs/cala_core"
 )]
 #![deny(unsafe_code)]
@@ -45,7 +75,7 @@ pub mod os;
 mod start;
 
 #[cfg(feature = "log")]
-mod log;
+pub mod log;
 
 #[doc(hidden)]
 pub mod _macro {
@@ -59,36 +89,6 @@ pub mod _macro {
     pub fn say(text: &str) {
         super::log::say(text)
     }
-}
-
-/// **cala**: Set an asynchronous function as the entry point for the program.
-#[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
-#[macro_export]
-macro_rules! exec {
-    ($main:ident) => {
-        fn main() {
-            use $crate::pasts::Executor;
-            static EXECUTOR: $crate::pasts::CvarExec =
-                $crate::pasts::CvarExec::new();
-            EXECUTOR.block_on($main());
-        }
-    };
-}
-
-/// **cala**: Set an asynchronous function as the entry point for the program.
-#[cfg(all(feature = "cala", target_arch = "wasm32"))]
-#[macro_export]
-macro_rules! exec {
-    ($main:ident) => {
-        mod main {
-            // Web Assembly "main" function
-            #[no_mangle]
-            extern "C" fn wasm_main() {
-                $crate::os::web::panic_hook();
-                $crate::os::web::block_on(super::$main());
-            }
-        }
-    };
 }
 
 /*/// Set a function as the entry point for the program.
