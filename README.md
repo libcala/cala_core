@@ -14,8 +14,9 @@
 This crate is used to make it easier to port to WASM, Android, etc. 
 
 ### Supports
- - Web: cargo-web/stdweb, wasm-pack/wasm-bindgen, cargo-cala backends for maximum
-   interoperability
+ - wasm-pack/wasm-bindgen
+ - without a bundler (see testwasm example)
+ - cargo-cala (automates the "without a bundler" routine)
 
 ## Targets
 Targets that are marked are currently *supported*, the rest are *planned*.

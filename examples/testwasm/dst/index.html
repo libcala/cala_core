@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+ <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+ <meta
+  content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=1"
+  name="viewport"
+ />
+ <title>testwasm</title>
+ <link rel="icon" href="https://libcala.github.io/icon.svg">
+</head>
+<body>
+ <script type="module">
+  import init, {wake} from './testwasm.js';
+  init().then(function(wasm) { wake(0, 0); });
+ </script>
+</body>
+</html>

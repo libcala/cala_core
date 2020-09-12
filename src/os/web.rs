@@ -23,9 +23,6 @@ use std::{
 #[cfg(feature = "wasm-bindgen")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-use stdweb::unstable::TryInto;
-
 thread_local! {
     // A map of the resolved promises / ready futures
     static READY: RefCell<HashMap<i32, JsVar>> = RefCell::new(HashMap::new())
@@ -46,13 +43,7 @@ pub fn wake(promise: i32, result: i32) {
     wake_internal(promise, result);
 }
 
-#[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-#[js_export]
-fn wake(promise: i32, result: i32) {
-    wake_internal(promise, result);
-}
-
-#[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+#[cfg(not(feature = "wasm-bindgen"))]
 #[no_mangle]
 extern "C" fn wake(promise: i32, result: i32) {
     wake_internal(promise, result);
@@ -107,18 +98,7 @@ impl JsVar {
         Self(_cala_js_store_int(value))
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    fn from_i32_internal(value: i32) -> Self {
-        Self(
-            js! {
-                return _cala_js_store_int(@{value});
-            }
-            .try_into()
-            .unwrap(),
-        )
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     fn from_i32_internal(value: i32) -> Self {
         extern "C" {
             // Free a JavaScript object
@@ -141,15 +121,7 @@ impl JsVar {
         _cala_js_load_int(value.0)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn into_i32_internal(value: &JsVar) -> i32 {
-        let ret = js! {
-            return _cala_js_load_int(@{value.0});
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn into_i32_internal(value: &JsVar) -> i32 {
         extern "C" {
             // Free a JavaScript object
@@ -173,18 +145,7 @@ impl JsVar {
         Self(_cala_js_store_float(value))
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    fn from_f32_internal(value: f32) -> Self {
-        Self(
-            js! {
-                return _cala_js_store_float(@{value});
-            }
-            .try_into()
-            .unwrap(),
-        )
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     fn from_f32_internal(value: f32) -> Self {
         extern "C" {
             // Free a JavaScript object
@@ -207,16 +168,7 @@ impl JsVar {
         _cala_js_load_float(value.0)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn into_f32_internal(value: &JsVar) -> f32 {
-        let ret = js! {
-            return _cala_js_load_float(@{value.0});
-        };
-        let ret: f64 = ret.try_into().unwrap();
-        ret as _
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn into_f32_internal(value: &JsVar) -> f32 {
         extern "C" {
             // Free a JavaScript object
@@ -240,7 +192,7 @@ impl JsVar {
         Self(_cala_js_store_double(value))
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     fn from_f64_internal(value: f64) -> Self {
         Self(
             js! {
@@ -251,7 +203,7 @@ impl JsVar {
         )
     }
 
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     fn from_f64_internal(value: f64) -> Self {
         extern "C" {
             // Free a JavaScript object
@@ -274,15 +226,7 @@ impl JsVar {
         _cala_js_load_double(value.0)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn into_f64_internal(value: &JsVar) -> f64 {
-        let ret = js! {
-            return _cala_js_load_double(@{value.0});
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn into_f64_internal(value: &JsVar) -> f64 {
         extern "C" {
             // Free a JavaScript object
@@ -365,7 +309,7 @@ impl JsVar {
         _cala_js_read_bytes(self.0, output.as_mut_ptr() as u32, length)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vec8i(&self, output: &mut Vec<u8>, length: u32) -> u32 {
         let ret = js! {
             return _cala_js_read_bytes(
@@ -377,7 +321,7 @@ impl JsVar {
         ret.try_into().unwrap()
     }
 
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vec8i(&self, output: &mut Vec<u8>, length: u32) -> u32 {
         extern "C" {
             fn _cala_js_read_bytes(j: i32, p: u32, l: u32) -> u32;
@@ -394,19 +338,7 @@ impl JsVar {
         _cala_js_read_ints(self.0, output.as_mut_ptr() as u32, length)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn vec32i(&self, output: &mut Vec<i32>, length: u32) -> u32 {
-        let ret = js! {
-            return _cala_js_read_ints(
-                @{self.0},
-                @{output.as_mut_ptr() as u32},
-                @{length}
-            );
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vec32i(&self, output: &mut Vec<i32>, length: u32) -> u32 {
         extern "C" {
             fn _cala_js_read_ints(j: i32, p: u32, l: u32) -> u32;
@@ -423,19 +355,7 @@ impl JsVar {
         _cala_js_read_floats(self.0, output.as_mut_ptr() as u32, length)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn vec32f(&self, output: &mut Vec<f32>, length: u32) -> u32 {
-        let ret = js! {
-            return _cala_js_read_floats(
-                @{self.0},
-                @{output.as_mut_ptr() as u32},
-                @{length}
-            );
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vec32f(&self, output: &mut Vec<f32>, length: u32) -> u32 {
         extern "C" {
             fn _cala_js_read_floats(j: i32, p: u32, l: u32) -> u32;
@@ -452,19 +372,7 @@ impl JsVar {
         _cala_js_read_doubles(self.0, output.as_mut_ptr() as u32, length)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn vec64f(&self, output: &mut Vec<f64>, length: u32) -> u32 {
-        let ret = js! {
-            return _cala_js_read_doubles(
-                @{self.0},
-                @{output.as_mut_ptr() as u32},
-                @{length}
-            );
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vec64f(&self, output: &mut Vec<f64>, length: u32) -> u32 {
         extern "C" {
             fn _cala_js_read_doubles(j: i32, p: u32, l: u32) -> u32;
@@ -481,18 +389,7 @@ impl JsVar {
         _cala_js_write_bytes(self.0, input.as_ptr() as u32, input.len() as u32)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn slice8i(&self, input: &[u8]) {
-        js! {
-            return _cala_js_write_bytes(
-                @{self.0},
-                @{input.as_ptr() as u32},
-                @{input.len() as u32}
-            );
-        };
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn slice8i(&self, input: &[u8]) {
         extern "C" {
             fn _cala_js_write_bytes(j: i32, p: u32, l: u32) -> ();
@@ -509,18 +406,7 @@ impl JsVar {
         _cala_js_write_ints(self.0, input.as_ptr() as u32, input.len() as u32)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn slice32i(&self, input: &[i32]) {
-        js! {
-            return _cala_js_write_ints(
-                @{self.0},
-                @{input.as_ptr() as u32},
-                @{input.len() as u32}
-            );
-        };
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn slice32i(&self, input: &[i32]) {
         extern "C" {
             fn _cala_js_write_ints(j: i32, p: u32, l: u32) -> ();
@@ -537,18 +423,7 @@ impl JsVar {
         _cala_js_write_floats(self.0, input.as_ptr() as u32, input.len() as u32)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn slice32f(&self, input: &[f32]) {
-        js! {
-            return _cala_js_write_floats(
-                @{self.0},
-                @{input.as_ptr() as u32},
-                @{input.len() as u32}
-            );
-        };
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn slice32f(&self, input: &[f32]) {
         extern "C" {
             fn _cala_js_write_floats(j: i32, p: u32, l: u32) -> ();
@@ -569,18 +444,7 @@ impl JsVar {
         )
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn slice64f(&self, input: &[f64]) {
-        js! {
-            _cala_js_write_doubles(
-                @{self.0},
-                @{input.as_ptr() as u32},
-                @{input.len() as u32}
-            );
-        };
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn slice64f(&self, input: &[f64]) {
         extern "C" {
             fn _cala_js_write_doubles(j: i32, p: u32, l: u32) -> ();
@@ -601,19 +465,7 @@ impl JsVar {
         _cala_js_read_text(self.0, output.as_ptr() as u32, length)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn vecstr<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
-        let ret = js! {
-            return _cala_js_read_text(
-                @{self.0},
-                @{output.as_ptr() as u32},
-                @{length}
-            );
-        };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn vecstr<T>(&self, output: &mut Vec<T>, length: u32) -> u32 {
         extern "C" {
             fn _cala_js_read_text(idx: i32, p: u32, l: u32) -> u32;
@@ -630,13 +482,7 @@ impl JsVar {
         _cala_js_waker(self.0)
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    unsafe fn set_waker_internal(&self) {
-        let ret = js! { _cala_js_waker(@{self.0}); };
-        ret.try_into().unwrap()
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     unsafe fn set_waker_internal(&self) {
         extern "C" {
             fn _cala_js_waker(idx: i32);
@@ -662,15 +508,7 @@ impl Drop for JsVar {
         _cala_js_free(self.0);
     }
 
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    fn drop(&mut self) {
-        self.drop_internal();
-        js! {
-            _cala_js_free(@{self.0});
-        }
-    }
-
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     fn drop(&mut self) {
         extern "C" {
             // Free a JavaScript object
@@ -709,21 +547,7 @@ impl JsString {
     }
 
     /// Allocate a new javascript string from a Rust string slice.
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    pub fn new(string: &str) -> JsString {
-        // around the right amount of memory
-        let mut text = Vec::with_capacity(string.len());
-        for c in string.encode_utf16() {
-            text.push(c);
-        }
-        let string = js! {
-            return _cala_js_text(@{text.as_ptr() as u32}, @{text.len() as u32});
-        };
-        JsString(JsVar(string.try_into().unwrap()))
-    }
-
-    /// Allocate a new javascript string from a Rust string slice.
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub fn new(string: &str) -> JsString {
         extern "C" {
             // Turn Rust UTF-16 String Into JavaScript String.
@@ -783,27 +607,7 @@ impl JsFn {
 
     /// Define a function (two parameters param_a: u32, and param_b: u32,
     /// returns a u32)
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    pub unsafe fn new(string: &str) -> JsFn {
-        let javascript = format!(
-            "\
-            \"use strict\";\
-            return function(param_a, param_b) {{ {} }};\
-        ",
-            string
-        );
-
-        let string = JsString::new(&javascript);
-        let func = js! {
-            return _cala_js_function(@{string.as_var().0});
-        };
-
-        JsFn(JsVar(func.try_into().unwrap()))
-    }
-
-    /// Define a function (two parameters param_a: u32, and param_b: u32,
-    /// returns a u32)
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub unsafe fn new(string: &str) -> JsFn {
         extern "C" {
             // Execute some JavaScript string.
@@ -849,26 +653,7 @@ impl JsFn {
     }
 
     /// Call a JavaScript function.
-    #[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-    pub unsafe fn call(
-        &self,
-        a: Option<&JsVar>,
-        b: Option<&JsVar>,
-    ) -> Option<JsVar> {
-        let ret = js! {
-            return _cala_js_call(@{(self.0).0},
-                @{a.map(|x| x.0).unwrap_or(-1)},
-                @{b.map(|x| x.0).unwrap_or(-1)});
-        };
-        if ret == -1 {
-            None
-        } else {
-            Some(JsVar(ret.try_into().unwrap()))
-        }
-    }
-
-    /// Call a JavaScript function.
-    #[cfg(not(any(feature = "stdweb", feature = "wasm-bindgen")))]
+    #[cfg(not(feature = "wasm-bindgen"))]
     pub unsafe fn call(
         &self,
         a: Option<&JsVar>,

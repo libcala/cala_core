@@ -1,0 +1,12 @@
+[package]
+name = "testwasm"
+version = "0.1.0"
+authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
+edition = "2018"
+
+[lib]
+path = "src/testwasm.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+cala_core = { path = "../../", default-features = false }

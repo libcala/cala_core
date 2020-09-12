@@ -40,10 +40,6 @@
     variant_size_differences
 )]
 
-#[cfg(all(feature = "stdweb", not(feature = "wasm-bindgen")))]
-#[macro_use]
-extern crate stdweb;
-
 #[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
 #[doc(hidden)]
 pub extern crate pasts;
