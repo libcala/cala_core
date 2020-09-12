@@ -40,11 +40,26 @@
     variant_size_differences
 )]
 
-#[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
-#[doc(hidden)]
-pub extern crate pasts;
-
 pub mod os;
+
+mod start;
+
+#[cfg(feature = "log")]
+mod log;
+
+#[doc(hidden)]
+pub mod _macro {
+    #![allow(unsafe_code)]
+
+    pub fn start(f: std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>) {
+        unsafe { super::start::start(f) }
+    }
+
+    #[cfg(feature = "log")]
+    pub fn say(text: &str) {
+        super::log::say(text)
+    }
+}
 
 /// **cala**: Set an asynchronous function as the entry point for the program.
 #[cfg(all(feature = "cala", not(target_arch = "wasm32")))]
@@ -53,8 +68,8 @@ macro_rules! exec {
     ($main:ident) => {
         fn main() {
             use $crate::pasts::Executor;
-            static EXECUTOR: $crate::pasts::CvarExec
-                = $crate::pasts::CvarExec::new();
+            static EXECUTOR: $crate::pasts::CvarExec =
+                $crate::pasts::CvarExec::new();
             EXECUTOR.block_on($main());
         }
     };

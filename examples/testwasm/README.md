@@ -22,3 +22,16 @@ wasm-snip --snip-rust-panicking-code --snip-rust-fmt-code dst/testwasm.wasm -o d
 ```bash
 https dst/
 ```
+
+# With Wasm-Pack And Wasm-Bindgen
+First, in Cargo.toml, uncomment the wasm-bindgen dependency, and feature on
+cala\_core.
+
+Second, uncomment the `hook` module in testwasm.rs while also commenting out the
+`start!()` macro.
+
+And, finally, run this command:
+
+```bash
+wasm-pack build --target web -d ./wasm-pack/pkg && http ./wasm-pack/
+```

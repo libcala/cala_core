@@ -12,10 +12,10 @@
 #![allow(unsafe_code)]
 
 use std::{
-    marker::PhantomData,
     cell::RefCell,
     collections::HashMap,
     future::Future,
+    marker::PhantomData,
     pin::Pin,
     task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
 };
@@ -36,22 +36,9 @@ fn wake_internal(promise: i32, result: i32) {
     executor();
 }
 
-#[cfg(feature = "wasm-bindgen")]
-#[doc = ""]
-#[wasm_bindgen]
-pub fn wake(promise: i32, result: i32) {
-    wake_internal(promise, result);
-}
-
-#[cfg(not(feature = "wasm-bindgen"))]
-#[no_mangle]
-extern "C" fn wake(promise: i32, result: i32) {
-    wake_internal(promise, result);
-}
-
 /// A JavaScript Promise
 #[derive(Debug)]
-pub struct JsPromise<T: From<JsVar>>(JsVar, PhantomData::<T>);
+pub struct JsPromise<T: From<JsVar>>(JsVar, PhantomData<T>);
 
 impl<T: From<JsVar>> JsPromise<T> {
     /// Poll a JavaScript Promise.
@@ -545,7 +532,7 @@ impl JsString {
     pub fn as_var(&self) -> &JsVar {
         &self.0
     }
-    
+
     /// Turn a `JsVar` into a `JsString`.  This does no type-checking, therefore
     /// is unsafe.
     pub unsafe fn from_var(var: JsVar) -> JsString {

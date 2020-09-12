@@ -8,5 +8,13 @@ edition = "2018"
 path = "src/testwasm.rs"
 crate-type = ["cdylib"]
 
-[dependencies]
-cala_core = { path = "../../", default-features = false }
+[dependencies.cala_core]
+path = "../../"
+default-features = false
+features = [
+    "log",
+    # "wasm-bindgen",
+]
+
+# [dependencies.wasm-bindgen]
+# version = "0.2"

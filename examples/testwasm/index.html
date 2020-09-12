@@ -12,8 +12,8 @@
 </head>
 <body>
  <script type="module">
-  import init, {start, wake} from './testwasm.js';
-  init().then(function(wasm) { start(); });
+  import start, {init, wake} from './pkg/testwasm.js';
+  start().then(function(wasm) { init(); });
  </script>
 </body>
 </html>

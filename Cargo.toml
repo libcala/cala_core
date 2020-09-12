@@ -23,7 +23,7 @@ keywords = []
 readme = "README.md"
 edition = "2018"
 
-# Optional (default) wasm-bindgen support.
+# Optional (enabled by default) wasm-bindgen support.
 [target.'cfg(target_arch = "wasm32")'.dependencies.wasm-bindgen]
 version = "0.2"
 optional = true
@@ -34,3 +34,9 @@ default-target = "x86_64-unknown-linux-gnu"
 
 [features]
 default = ["wasm-bindgen"]
+log = []
+audio = []
+keyboard = []
+mouse = []
+pad = []
+screen = []
