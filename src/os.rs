@@ -88,6 +88,82 @@ pub struct c_float(raw::c_float);
 #[derive(Copy, Clone, Debug)]
 pub struct c_double(raw::c_double);
 
+/// C `const T*`.  Doesn't implement `Send` or `Sync`.
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct c_ref<T>(*const T);
+
+impl<T> c_ref<T> {
+    /// Wrap a raw C pointer in a newtype.
+    pub fn from_raw(pointer: *const T) -> Self {
+        Self(pointer)
+    }
+
+    /// Get an immutable reference from the pointer.
+    #[allow(unsafe_code)]
+    pub fn get(&self) -> &T {
+        unsafe { &*self.0 }
+    }
+
+    /// Use a closure to free the memory pointer.
+    pub fn free<F: FnOnce(*const T)>(self, f: F) {
+        f(self.0);
+        let mut this = self;
+        this.0 = std::ptr::null_mut();
+    }
+
+    /// Run closure with a reference to the data in the pointer.
+    #[allow(unsafe_code)]
+    pub fn with<R, F: FnOnce(&T) -> R>(&self, f: F) -> R {
+        f(unsafe { &*self.0 })
+    }
+}
+
+/// C `T*` that must be free'd.  Doesn't implement `Send` or `Sync`.
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct c_ptr<T>(*mut T);
+
+impl<T> c_ptr<T> {
+    /// Wrap a raw C pointer in a newtype.
+    pub fn from_raw(pointer: *mut T) -> Self {
+        Self(pointer)
+    }
+
+    /// Get an immutable reference from the pointer.
+    #[allow(unsafe_code)]
+    pub fn get(&self) -> &T {
+        unsafe { &*self.0 }
+    }
+
+    /// Get a mutable reference from the pointer.
+    #[allow(unsafe_code)]
+    pub fn get_mut(&mut self) -> &mut T {
+        unsafe { &mut *self.0 }
+    }
+
+    /// Use a closure to free the memory pointer.
+    pub fn free<F: FnOnce(*mut T)>(self, f: F) {
+        f(self.0);
+        let mut this = self;
+        this.0 = std::ptr::null_mut();
+    }
+
+    /// Run closure with a reference to the data in the pointer.
+    #[allow(unsafe_code)]
+    pub fn with<R, F: FnOnce(&mut T) -> R>(&self, f: F) -> R {
+        f(unsafe { &mut *self.0 })
+    }
+}
+
+impl<T> Drop for c_ptr<T> {
+    fn drop(&mut self) {
+        if !self.0.is_null() {
+            panic!("Raw pointer has been leaked!");
+        }
+    }
+}
+
 impl Default for c_char {
     fn default() -> Self {
         Self(0)
