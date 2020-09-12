@@ -194,17 +194,6 @@ impl JsVar {
 
     #[cfg(not(feature = "wasm-bindgen"))]
     fn from_f64_internal(value: f64) -> Self {
-        Self(
-            js! {
-                return _cala_js_store_double(@{value});
-            }
-            .try_into()
-            .unwrap(),
-        )
-    }
-
-    #[cfg(not(feature = "wasm-bindgen"))]
-    fn from_f64_internal(value: f64) -> Self {
         extern "C" {
             // Free a JavaScript object
             fn _cala_js_store_double(idx: f64) -> i32;
@@ -307,18 +296,6 @@ impl JsVar {
             fn _cala_js_read_bytes(j: i32, p: u32, l: u32) -> u32;
         }
         _cala_js_read_bytes(self.0, output.as_mut_ptr() as u32, length)
-    }
-
-    #[cfg(not(feature = "wasm-bindgen"))]
-    unsafe fn vec8i(&self, output: &mut Vec<u8>, length: u32) -> u32 {
-        let ret = js! {
-            return _cala_js_read_bytes(
-                @{self.0},
-                @{output.as_mut_ptr() as u32},
-                @{length}
-            );
-        };
-        ret.try_into().unwrap()
     }
 
     #[cfg(not(feature = "wasm-bindgen"))]

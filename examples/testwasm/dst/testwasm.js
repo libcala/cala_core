@@ -5,6 +5,7 @@ function say(size, data) {
 	var buffer = new Uint8Array(rust.buffer, data, size);
 	console.info(decoder.decode(buffer));
 };
+export function init() { wasm.init(); }
 export function wake(promise, result) { wasm.wake(promise, result); }
 async function load(mod, imports) {
 	if('instantiateStreaming' in window.WebAssembly) {
@@ -21,7 +22,7 @@ async function load(mod, imports) {
 		}
 	}
 }
-async function init(input) {
+async function start(input) {
 	input = fetch(import.meta.url.replace(/\.js$/, '.wasm'));
 	const imports = { env: {
 		say: say
@@ -32,4 +33,4 @@ async function init(input) {
 	init.__wbindgen_wasm_mod = mod;
 	return wasm;
 }
-export default init;
+export default start;
