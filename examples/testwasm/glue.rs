@@ -1,6 +1,6 @@
 //! Cross-platform glue
 
-include!("src/testwasm.rs");
+include!("src/main.rs");
 
 // Uncomment for wasm-bindgen support.
 /*mod hook {

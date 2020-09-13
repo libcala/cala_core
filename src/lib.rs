@@ -17,13 +17,9 @@
 //! edition = "2018"
 //!
 //! [lib]
-//! name = "hello_world_lib"
+//! name = "mod"
 //! path = "glue.rs"
 //! crate-type = ["cdylib"]
-//!
-//! [[bin]]
-//! name = "hello_world"
-//! path = "src/hello_world.rs"
 //!
 //! [dependencies.cala_core]
 //! version = "0.2"
@@ -31,7 +27,7 @@
 //! features = ["log"]
 //! ```
 //!
-//! A **/src/hello_world.rs**:
+//! A **/src/main.rs**:
 //! ```rust
 //! #[macro_use]
 //! extern crate cala_core;
@@ -45,7 +41,7 @@
 //! If you want to support WebAssembly, Android, and similar targets you'll also
 //! need **/glue.rs**:
 //! ```rust
-//! include!("src/hello_world.rs");
+//! include!("src/main.rs");
 //! ```
 
 #![doc(
