@@ -42,8 +42,8 @@
 //! }
 //! ```
 //!
-//! If you want to support WebAssembly and Android you'll also need
-//! **/glue.rs**:
+//! If you want to support WebAssembly, Android, and similar targets you'll also
+//! need **/glue.rs**:
 //! ```rust
 //! include!("src/hello_world.rs");
 //! ```
