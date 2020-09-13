@@ -11,10 +11,55 @@
 
 #![allow(non_camel_case_types, trivial_numeric_casts, clippy::useless_conversion)]
 
-use std::{convert::TryFrom, os::raw};
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+pub use std::os::unix::prelude::*;
+
+use std::{convert::TryFrom, os::{raw}};
 
 #[cfg(any(feature = "docs-rs", target_arch = "wasm32"))]
 pub mod web;
+
+/// File Descriptor (Unix), Socket (Windows) or Promise (Web)
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct Connection(
+    #[cfg(all(unix, not(target_arch = "wasm32")))]
+    RawFd,
+    #[cfg(all(windows, not(target_arch = "wasm32")))]
+    os::windows::io::RawSocket,
+    #[cfg(target_arch = "wasm32")]
+    u32,
+);
+
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+impl AsRawFd for Connection {
+    fn as_raw_fd(&self) -> RawFd {
+        self.0
+    }
+}
+
+impl Drop for Connection {
+    #[allow(unsafe_code)]
+    fn drop(&mut self) {
+        #[cfg(all(unix, not(target_arch = "wasm32")))]
+        {
+            extern "C" {
+                fn close(fd: Connection) -> c_sint;
+            }
+            let _ = unsafe {
+                close(Self(self.0))
+            };
+        }
+        #[cfg(all(windows, not(target_arch = "wasm32")))]
+        {
+            todo!()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            todo!()
+        }
+    }
+}
 
 /// C `void`
 #[repr(transparent)]
